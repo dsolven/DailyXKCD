@@ -14,6 +14,7 @@ Module.register("DailyXKCD",{
 		
 		this.dailyComic = "";
 		this.dailyComicTitle = "";
+		this.dailyComicAlt = "";
 		
 		this.getComic();
 	},
@@ -35,6 +36,7 @@ Module.register("DailyXKCD",{
 				Log.info(payload.img);
 				this.dailyComic = payload.img;
 				this.dailyComicTitle = payload.safe_title;
+				this.dailyComicAlt = payload.alt;
 				this.scheduleUpdate();
 		}
 		
@@ -53,9 +55,16 @@ Module.register("DailyXKCD",{
 		if(this.config.invertColors){
 			xkcd.setAttribute("style", "-webkit-filter: invert(100%);")
 		}
-		
+
+		var alt = document.createElement("div");
+		alt.className = "normal xsmall light";
+		alt.innerHTML = this.dailyComicAlt;
+		alt.style.maxWidth = "1000px";
+		alt.style.margin = "auto";
+
 		wrapper.appendChild(title);
 		wrapper.appendChild(xkcd);
+		wrapper.appendChild(alt);
 		return wrapper;
 	},
 	
