@@ -3,9 +3,9 @@ Module.register("DailyXKCD",{
 	// Default module config.
 	defaults: {
 		dailyJsonUrl : "http://xkcd.com/info.0.json",
-		updateInterval : 10000 * 60 * 60, // 10 hours
-		invertColors : false
-
+		updateInterval : 1000 * 60 * 60 * 10, // 10 hours
+		invertColors : false,
+		onlyShowTodaysComic: false
 	},
 
 	start: function() {
@@ -15,6 +15,8 @@ Module.register("DailyXKCD",{
 		this.dailyComic = "";
 		this.dailyComicTitle = "";
 		this.dailyComicAlt = "";
+		this.dailyComicDate = moment({y:0,M:0,d:0});
+		this.showComic = false;
 
 		this.getComic();
 	},
@@ -31,41 +33,53 @@ Module.register("DailyXKCD",{
 	},
 
 	socketNotificationReceived: function(notification, payload) {
-
 		if(notification === "COMIC"){
 				Log.info(payload.img);
 				this.dailyComic = payload.img;
 				this.dailyComicTitle = payload.safe_title;
 				this.dailyComicAlt = payload.alt;
+				this.dailyComicDate = moment({
+					year: payload.year,
+					month: payload.month -1,
+					day: payload.day});
+				this.showComic = this.config.onlyShowTodaysComic ? this.isComicFromToday() : true;
 				this.scheduleUpdate();
+				Log.log(this);
 		}
+	},
 
+	isComicFromToday: function() {
+		return this.dailyComicDate.isSame(moment(),'day');
 	},
 
 	// Override dom generator.
 	getDom: function() {
 		var wrapper = document.createElement("div");
 
-		var title = document.createElement("div");
-		title.className = "bright large light";
-		title.innerHTML = this.dailyComicTitle;
+		if (this.showComic === true) {
+			var title = document.createElement("div");
+			title.className = "bright large light";
+			title.innerHTML = this.dailyComicTitle;
 
-		var xkcd = document.createElement("img");
-		xkcd.src = this.dailyComic;
-		if(this.config.invertColors){
-			xkcd.setAttribute("style", "-webkit-filter: invert(100%);")
+			var xkcd = document.createElement("img");
+			xkcd.src = this.dailyComic;
+			if(this.config.invertColors){
+				xkcd.setAttribute("style", "-webkit-filter: invert(100%);")
+			}
+
+			var alt = document.createElement("div");
+			alt.className = "normal xsmall light";
+			alt.innerHTML = this.dailyComicAlt;
+			alt.style.maxWidth = "1000px";
+			alt.style.margin = "auto";
+
+			wrapper.appendChild(title);
+			wrapper.appendChild(xkcd);
+			wrapper.appendChild(alt);
+			return wrapper;
+		} else {
+			return wrapper;
 		}
-
-		var alt = document.createElement("div");
-		alt.className = "normal xsmall light";
-		alt.innerHTML = this.dailyComicAlt;
-		alt.style.maxWidth = "1000px";
-		alt.style.margin = "auto";
-
-		wrapper.appendChild(title);
-		wrapper.appendChild(xkcd);
-		wrapper.appendChild(alt);
-		return wrapper;
 	},
 
 	scheduleUpdate: function() {

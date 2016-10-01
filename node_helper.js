@@ -15,6 +15,7 @@ module.exports = NodeHelper.create({
 		if(notification === "GET_COMIC"){
 
 			var comicJsonUri = payload.config.dailyJsonUrl;
+			console.log('XKCD request: ' + comicJsonUri);
 
 			request(comicJsonUri, function (error, response, body) {
 				if (!error && response.statusCode == 200) {
